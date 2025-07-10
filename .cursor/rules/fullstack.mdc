@@ -1,0 +1,89 @@
+---
+description: >
+  Guide complet pour un développeur fullstack travaillant avec React (frontend)
+  et Supabase (backend). Ce fichier définit des règles strictes en matière de
+  design, sécurité, performance, accessibilité, structure de projet et bonnes
+  pratiques de développement, afin d'assurer un produit maintenable,
+  évolutif et sécurisé.
+
+stack:
+  frontend: React 18+
+  backend: Supabase (PostgreSQL, Auth, Storage, Edge Functions)
+  langage: TypeScript (TSX), CSS/SCSS
+  autres: Vite, TailwindCSS, Git, ESLint, Prettier
+
+globs:
+  description: >
+    Ces règles s'appliquent à tous les fichiers de l'application React/Supabase.
+  globs:
+    - "**/*.{js,ts,jsx,tsx}"
+    - "**/*.{css,scss}"
+    - "**/*.html"
+    - "**/*.sql"
+    - "**/*.md"
+    - "**/*.json"
+    - "**/*.env"
+    - "**/*.sh"
+
+alwaysApply: true
+
+rules:
+
+  design:
+    - Utiliser un design système cohérent .
+    - Respecter une hiérarchie visuelle claire (H1 > H2 > ...).
+    - Utiliser des composants réutilisables (Atomic Design recommandé).
+    - Responsive par défaut : mobile-first, flex/grid, media queries.
+    - Respecter l’accessibilité (WCAG 2.1) : aria-label, contrastes, focus.
+
+  structure_de_projet:
+    - Organiser le code par feature/domain et non par type de fichier.
+    - Respecter la séparation des responsabilités (components, hooks, services).
+    - Utiliser des noms explicites, kebab-case pour les dossiers, camelCase pour les fichiers JS/TS.
+
+  sécurité:
+    - Toujours valider/sanitiser les données entrantes côté client et serveur.
+    - Utiliser les policies RLS (Row-Level Security) de Supabase.
+    - Protéger les clés API via des variables d'environnement (`.env`).
+    - Ne jamais stocker de données sensibles en localStorage (préférer cookies sécurisés).
+    - Gérer les rôles et permissions avec Supabase Auth + Policies.
+    - Désactiver l’indexation (robots.txt) si environnement staging/dev.
+
+  performance:
+    - Lazy loading des composants React avec `React.lazy()` et `Suspense`.
+    - Préférer `useMemo`/`useCallback` pour éviter les rerenders inutiles.
+    - Utiliser SWR/React Query pour la gestion optimisée des requêtes API.
+    - Supabase : indexer les colonnes utilisées en filtre/tri.
+    - Éviter les appels multiples à la base, regrouper via RPC ou View si possible.
+    - Utiliser `Image` optimisée (ou services CDN) pour les assets.
+
+  qualité_de_code:
+    - Linting strict avec ESLint + Airbnb ou Standard config.
+    - Formatage automatique avec Prettier.
+    - Typage strict avec TypeScript (no `any`, types explicites).
+    - Tests unitaires avec Vitest ou Jest.
+    - Validation de formulaire avec Zod ou React Hook Form.
+    - Documentation des fonctions complexes (commentaires JSDoc).
+
+  accessibilité:
+    - Ne jamais utiliser de `div` pour des boutons (utiliser `<button>`).
+    - Labels associés aux inputs (avec `htmlFor`).
+    - Navigation clavier complète (tabindex, aria-focus).
+    - Composants accessibles (ex : dialog, menu, toggle).
+
+  devops:
+    - Utiliser Git avec des conventions de commit (`conventional commits`).
+    - Branches bien nommées : `feature/login-form`, `fix/user-auth`, etc.
+    - Déploiement continu (Vercel ou Netlify).
+    - Variables d’environnement par environnement (`.env.local`, `.env.prod`).
+    - Monitoring avec Sentry ou LogRocket (optionnel mais recommandé).
+
+  documentation:
+    - README clair, en français ou anglais (description du projet, installation, scripts).
+    - Diagrammes d’architecture (ex: db schema, flow data, structure frontend).
+    - Fichier `CONTRIBUTING.md` si projet collaboratif.
+
+metadata:
+  author: "Développeur Fullstack React x Supabase"
+  lastUpdate: "2025-07-08"
+  version: "1.0.0"

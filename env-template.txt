@@ -1,0 +1,16 @@
+# Configuration Supabase pour SenAlert
+# Copiez ce contenu vers un fichier .env.local et remplacez les valeurs
+
+# URL de votre projet Supabase (ex: https://abcdefghijklmnop.supabase.co)
+VITE_SUPABASE_URL=https://your-project.supabase.co
+
+# Clé anonyme de votre projet Supabase (commence par eyJ...)
+VITE_SUPABASE_ANON_KEY=your-anon-key
+
+# Instructions pour obtenir ces clés :
+# 1. Allez sur https://supabase.com/dashboard
+# 2. Sélectionnez votre projet SenAlert
+# 3. Allez dans Settings > API
+# 4. Copiez "Project URL" dans VITE_SUPABASE_URL
+# 5. Copiez "anon public" dans VITE_SUPABASE_ANON_KEY
+# 6. Redémarrez votre serveur : npm run dev 

@@ -1,0 +1,14 @@
+---
+description: "Règle pour vérifier la base de données avec MCP lors d'actions nécessitant l'accès aux données"
+globs: ["**/*.{js,ts,jsx,tsx,py,java,cs,php,rb,go,rs}"]
+alwaysApply: false
+---
+
+Lorsque vous effectuez des actions qui nécessitent l'accès, la lecture, l'écriture ou la modification de la base de données, utilisez le serveur MCP déjà mis en place pour :
+
+1. **Vérifier la structure de la base de données** avant toute opération
+2. **Valider les requêtes** avant leur exécution
+3. **S'assurer de la cohérence** des données
+4. **Utiliser les connexions sécurisées** configurées dans le serveur MCP
+
+Avant d'exécuter des opérations sur la base de données, consultez toujours le serveur MCP pour obtenir les informations nécessaires sur le schéma et les contraintes.

@@ -1,0 +1,178 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+.vercel/
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+logs
+*.log
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# nyc test coverage
+.nyc_output
+
+# Dependency directories
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# parcel-bundler cache (https://parceljs.org/)
+.cache
+.parcel-cache
+
+# Next.js build output
+.next
+
+# Nuxt.js build / generate output
+.nuxt
+dist
+
+# Gatsby files
+.cache/
+public
+
+# Storybook build outputs
+.out
+.storybook-out
+
+# Temporary folders
+tmp/
+temp/
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# System files
+$Recycle.Bin/
+$AV_ASW/
+.GamingRoot
+.anima/
+3uToolsV3/
+"Base de donn\303\251es/"
+CleanSwift/
+DumpStack.log
+DumpStack.log.tmp
+ML/
+"Mes Sites Web/"
+"Mon portfolio/"
+MyAngular/
+OneDriveTemp/
+"POINT DE VENTE VF/"
+"PointofSale-Laravel (1)/"
+"Program Files (x86)/"
+"Program Files/"
+ProgramData/
+Recovery/
+Scanner-master/
+StockFlow/
+Users/
+Windows/
+apache-maven-3.9.7-bin.zip
+apache-maven-3.9.7/
+appverifUI.dll
+"base objet/"
+bootTel.dat
+composer/
+"cv-optimizer-main (1)/"
+hiberfil.sys
+immoafrica-dev.rar
+library-management-system-master/
+"master 1 base object/"
+medical-image-analysis/
+pagefile.sys
+pharmacy-management/
+php-8.3.8-Win32-vs16-x64.zip
+php-8.3.8-src.zip
+php-8.3.8-src/
+php/
+project-bolt-sb1-9g7aszcn/
+projectScan/
+"projet atelier dev/"
+"projet flask.zip"
+projet-pointage-scolaire/
+projet-universite/
+qr-generator/
+qr-scanner-app/
+snalert.zip
+senfournisseurs/
+spring-boot-exam-ong/
+spring-boot-ong/
+spring/
+starter-1748707274/
+starter/
+stockFlow-main/
+swapfile.sys
+vfcompat.dll
+wamp64/
+youtube_download_v1.rar
+
+# Only include senalert project files
+!senalert/
