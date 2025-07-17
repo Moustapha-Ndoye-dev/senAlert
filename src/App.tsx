@@ -23,6 +23,7 @@ import AdminSettingsPage from "./pages/admin/AdminSettingsPage";
 import AdminNotificationsPage from "./pages/admin/AdminNotificationsPage";
 import AdminOrganizationsPage from "./pages/admin/AdminOrganizationsPage";
 import AdminSystemPage from "./pages/admin/AdminSystemPage";
+import CategoriePage from './pages/admin/CategoriePage';
 import { toast } from '@/hooks/use-toast';
 import { AuthProvider, useAuth } from '@/hooks/useAuth';
 import { PopulationRoute, AdminRoute, SuperAdminRoute, AdminOrSuperAdminRoute } from '@/components/ProtectedRoute';
@@ -158,6 +159,7 @@ const App: React.FC = () => {
               <Route path="users" element={<AdminUsersPage />} />
               <Route path="statistics" element={<AdminStatisticsPage />} />
               <Route path="settings" element={<AdminSettingsPage />} />
+              <Route path="categories" element={<CategoriePage />} />
             </Route>
             
             {/* Routes protégées pour les super administrateurs uniquement */}
@@ -170,10 +172,10 @@ const App: React.FC = () => {
               <Route path="organizations" element={<AdminOrganizationsPage />} />
               <Route path="system" element={<AdminSystemPage />} />
               <Route path="reports" element={<AdminReportsPage />} />
-              <Route path="notifications" element={<AdminNotificationsPage />} />
               <Route path="users" element={<AdminUsersPage />} />
               <Route path="statistics" element={<AdminStatisticsPage />} />
               <Route path="settings" element={<AdminSettingsPage />} />
+              <Route path="categories" element={<CategoriePage />} />
             </Route>
             
             {/* Route catch-all */}

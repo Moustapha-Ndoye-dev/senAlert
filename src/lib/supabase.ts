@@ -54,7 +54,6 @@ export interface SuperAdmin {
   password_hash: string;
   email: string;
   name: string;
-  permissions: string[];
   status: string;
   created_at: string;
   last_login?: string;
@@ -104,6 +103,18 @@ export interface Notification {
   type: string;
   read: boolean;
   created_at: string;
+}
+
+// Type pour la catégorie
+export interface Categorie {
+  id: string;
+  nom: string;
+}
+
+// Type pour la liaison catégorie-organisation
+export interface CategorieOrganization {
+  categorie_id: string;
+  organization_id: string;
 }
 
 // Service pour la population (citoyens)
@@ -164,11 +175,11 @@ export const populationService = {
 // Service pour les administrateurs
 export const adminService = {
   // Connexion admin
-  async login(username: string, password: string): Promise<Admin | null> {
+  async login(usernameOrEmail: string, password: string): Promise<Admin | null> {
     const { data, error } = await supabase
       .from('admin')
       .select('*')
-      .eq('username', username)
+      .or(`username.eq.${usernameOrEmail},email.eq.${usernameOrEmail}`)
       .eq('status', 'active')
       .single();
 
@@ -241,17 +252,41 @@ export const adminService = {
 
     if (error) return [];
     return data || [];
+  },
+
+  // Créer un admin
+  async create(admin: Omit<Admin, 'id' | 'created_at' | 'last_login' | 'password_hash'> & { password: string }): Promise<Admin | null> {
+    const password_hash = await bcrypt.hash(admin.password, 10);
+    const { data, error } = await supabase
+      .from('admin')
+      .insert({
+        username: admin.username,
+        password_hash,
+        email: admin.email,
+        name: admin.name,
+        organization_id: admin.organization_id,
+        permissions: admin.permissions,
+        status: admin.status || 'active',
+        created_at: new Date().toISOString(),
+      })
+      .select()
+      .single();
+    if (error) {
+      console.error('Erreur lors de la création de l\'admin:', error);
+      return null;
+    }
+    return data;
   }
 };
 
 // Service pour les super administrateurs
 export const superAdminService = {
   // Connexion super admin
-  async login(username: string, password: string): Promise<SuperAdmin | null> {
+  async login(usernameOrEmail: string, password: string): Promise<SuperAdmin | null> {
     const { data, error } = await supabase
       .from('superadmin')
       .select('*')
-      .eq('username', username)
+      .or(`username.eq.${usernameOrEmail},email.eq.${usernameOrEmail}`)
       .eq('status', 'active')
       .single();
 
@@ -296,7 +331,66 @@ export const superAdminService = {
 
     if (error) return null;
     return data;
-  }
+  },
+
+  // Lister tous les super admins
+  async getAll(): Promise<SuperAdmin[]> {
+    const { data, error } = await supabase
+      .from('superadmin')
+      .select('*');
+    if (error) {
+      console.error('Erreur lors de la récupération des super admins:', error);
+      return [];
+    }
+    return data || [];
+  },
+
+  // Créer un super admin
+  async create(superAdmin: Omit<SuperAdmin, 'id' | 'created_at' | 'last_login' | 'password_hash'> & { password: string }): Promise<SuperAdmin | null> {
+    // Hasher le mot de passe côté client
+    const password_hash = await bcrypt.hash(superAdmin.password, 10);
+    const { data, error } = await supabase
+      .from('superadmin')
+      .insert({
+        username: superAdmin.username,
+        password_hash,
+        email: superAdmin.email,
+        name: superAdmin.name,
+        status: superAdmin.status || 'active',
+        created_at: new Date().toISOString(),
+      })
+      .select()
+      .single();
+    if (error) {
+      console.error('Erreur lors de la création du super admin:', error);
+      return null;
+    }
+    return data;
+  },
+
+  // Mettre à jour un super admin (hors mot de passe)
+  async update(id: string, updates: Partial<Omit<SuperAdmin, 'id' | 'created_at' | 'last_login' | 'password_hash'>>): Promise<void> {
+    const { error } = await supabase
+      .from('superadmin')
+      .update(updates)
+      .eq('id', id);
+    if (error) {
+      console.error('Erreur lors de la mise à jour du super admin:', error);
+      throw error;
+    }
+  },
+
+  // Supprimer un super admin
+  async delete(id: string): Promise<void> {
+    const { error } = await supabase
+      .from('superadmin')
+      .delete()
+      .eq('id', id);
+    if (error) {
+      console.error('Erreur lors de la suppression du super admin:', error);
+      throw error;
+    }
+  },
 };
 
 // Service pour les organisations
@@ -726,6 +820,152 @@ export const logService = {
       .eq('superadmin_id', superAdminId)
       .order('created_at', { ascending: false });
 
+    if (error) return [];
+    return data || [];
+  }
+};
+
+// Service pour les catégories
+export const categorieService = {
+  // Obtenir toutes les catégories
+  async getAll(): Promise<Categorie[]> {
+    const { data, error } = await supabase
+      .from('categorie')
+      .select('*')
+      .order('nom', { ascending: true });
+    if (error) throw error;
+    return data || [];
+  },
+  // Créer une catégorie
+  async create(nom: string): Promise<Categorie> {
+    const { data, error } = await supabase
+      .from('categorie')
+      .insert({ nom })
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  },
+  // Mettre à jour une catégorie
+  async update(id: string, nom: string): Promise<void> {
+    const { error } = await supabase
+      .from('categorie')
+      .update({ nom })
+      .eq('id', id);
+    if (error) throw error;
+  },
+  // Supprimer une catégorie
+  async delete(id: string): Promise<void> {
+    const { error } = await supabase
+      .from('categorie')
+      .delete()
+      .eq('id', id);
+    if (error) throw error;
+  }
+};
+
+// Service pour la liaison catégorie-organisation
+export const categorieOrganizationService = {
+  // Obtenir les organisations assignées à une catégorie
+  async getOrganizationsByCategorie(categorie_id: string): Promise<string[]> {
+    const { data, error } = await supabase
+      .from('categorie_organization')
+      .select('organization_id')
+      .eq('categorie_id', categorie_id);
+    if (error) throw error;
+    return data ? (data as { organization_id: string }[]).map(row => row.organization_id) : [];
+  },
+  // Obtenir les catégories assignées à une organisation
+  async getCategoriesByOrganization(organization_id: string): Promise<string[]> {
+    const { data, error } = await supabase
+      .from('categorie_organization')
+      .select('categorie_id')
+      .eq('organization_id', organization_id);
+    if (error) throw error;
+    return data ? (data as { categorie_id: string }[]).map(row => row.categorie_id) : [];
+  },
+  // Assigner une catégorie à une organisation
+  async assign(categorie_id: string, organization_id: string): Promise<void> {
+    const { error } = await supabase
+      .from('categorie_organization')
+      .insert({ categorie_id, organization_id });
+    if (error) throw error;
+  },
+  // Désassigner une catégorie d'une organisation
+  async unassign(categorie_id: string, organization_id: string): Promise<void> {
+    const { error } = await supabase
+      .from('categorie_organization')
+      .delete()
+      .eq('categorie_id', categorie_id)
+      .eq('organization_id', organization_id);
+    if (error) throw error;
+  }
+};
+
+// Service pour les logs système unifiés
+export const systemLogService = {
+  // Créer un log
+  async createLog({
+    actor_id = null,
+    actor_type = 'system',
+    level = 'info',
+    category = null,
+    action,
+    details = null
+  }: {
+    actor_id?: string | null,
+    actor_type?: 'admin' | 'superadmin' | 'system',
+    level?: 'info' | 'warning' | 'error' | 'success',
+    category?: string | null,
+    action: string,
+    details?: string | null
+  }): Promise<void> {
+    await supabase
+      .from('system_logs')
+      .insert({
+        actor_id,
+        actor_type,
+        level,
+        category,
+        action,
+        details,
+        created_at: new Date().toISOString()
+      });
+  },
+
+  // Obtenir tous les logs (optionnel: filtrage)
+  async getAll({ limit = 100, level, category }: { limit?: number, level?: string, category?: string } = {}) {
+    let query = supabase
+      .from('system_logs')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(limit);
+    if (level) query = query.eq('level', level);
+    if (category) query = query.eq('category', category);
+    const { data, error } = await query;
+    if (error) return [];
+    return data || [];
+  },
+
+  // Obtenir les logs par acteur
+  async getByActor(actor_id: string, actor_type: string) {
+    const { data, error } = await supabase
+      .from('system_logs')
+      .select('*')
+      .eq('actor_id', actor_id)
+      .eq('actor_type', actor_type)
+      .order('created_at', { ascending: false });
+    if (error) return [];
+    return data || [];
+  },
+
+  // Obtenir les logs par catégorie
+  async getByCategory(category: string) {
+    const { data, error } = await supabase
+      .from('system_logs')
+      .select('*')
+      .eq('category', category)
+      .order('created_at', { ascending: false });
     if (error) return [];
     return data || [];
   }

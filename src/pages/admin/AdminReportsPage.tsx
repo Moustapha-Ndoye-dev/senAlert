@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { useRealtimeTable } from '@/hooks/useRealtimeTable';
 import { reportService } from '@/lib/supabase';
+import { organizationService } from '@/lib/supabase';
 
 const AdminReportsPage = () => {
   const [reports, setReports] = useState<any[]>([]);
@@ -40,6 +41,10 @@ const AdminReportsPage = () => {
   const [adminUser, setAdminUser] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
+  const [organizations, setOrganizations] = useState<any[]>([]);
+  const [orgFilter, setOrgFilter] = useState('all');
+  const [selectedReport, setSelectedReport] = useState<any>(null);
+  const [categoryFilter, setCategoryFilter] = useState('all');
 
   useEffect(() => {
     // Charger les données de l'admin connecté
@@ -48,15 +53,21 @@ const AdminReportsPage = () => {
       setAdminUser(JSON.parse(userData));
     }
     loadReports();
+    loadOrganizations();
   }, []);
 
   useEffect(() => {
     filterAndSortReports();
-  }, [reports, searchTerm, statusFilter, typeFilter, dateFilter, sortBy, sortOrder]);
+  }, [reports, searchTerm, statusFilter, typeFilter, dateFilter, sortBy, sortOrder, orgFilter, categoryFilter]);
 
   const loadReports = async () => {
     const allReports = await reportService.getAll();
     setReports(allReports);
+  };
+
+  const loadOrganizations = async () => {
+    const orgs = await organizationService.getAll();
+    setOrganizations(orgs);
   };
 
   const filterAndSortReports = () => {
@@ -104,6 +115,16 @@ const AdminReportsPage = () => {
             return true;
         }
       });
+    }
+
+    // Filtre par catégorie/type d'incident
+    if (categoryFilter !== 'all') {
+      filtered = filtered.filter(report => report.type === categoryFilter);
+    }
+
+    // Filtre par organisation
+    if (orgFilter !== 'all') {
+      filtered = filtered.filter(report => report.organization_id === orgFilter);
     }
 
     // Tri
@@ -253,40 +274,89 @@ const AdminReportsPage = () => {
   };
 
   // Pagination
-  const totalPages = Math.ceil(reports.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredReports.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const currentReports = reports.slice(startIndex, endIndex);
+  const currentReports = filteredReports.slice(startIndex, endIndex);
 
+  // Statistiques
   const stats = {
-    total: reports.length,
-    enAttente: reports.filter(report => report.status === 'en-attente').length,
-    enCours: reports.filter(report => report.status === 'en-cours').length,
-    resolu: reports.filter(report => report.status === 'resolu' || report.status === 'termine').length
+    total: filteredReports.length,
+    enAttente: filteredReports.filter(r => r.status === 'en-attente').length,
+    enCours: filteredReports.filter(r => r.status === 'en-cours').length,
+    resolus: filteredReports.filter(r => r.status === 'termine' || r.status === 'resolu').length,
+    rejetes: filteredReports.filter(r => r.status === 'rejete').length,
   };
 
   useRealtimeTable('reports', loadReports);
 
   return (
-    <div className="space-y-4">
-      {/* Header simplifié */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-indigo-100 rounded-lg">
-              <Crown className="w-4 h-4 text-indigo-600" />
-          </div>
-          <div>
-            <h1 className="text-lg font-semibold text-gray-800">Historique des signalements</h1>
-            <p className="text-xs text-gray-500">Tous les signalements enregistrés dans la plateforme</p>
-          </div>
+    <div className="space-y-6">
+      {/* Statistiques */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div className="bg-white rounded-xl p-4 border border-gray-200">
+          <p className="text-sm text-gray-600">Total</p>
+          <p className="text-2xl font-bold text-gray-800">{stats.total}</p>
         </div>
-        <div className="text-right">
-          <p className="text-xs text-gray-500">Total</p>
-          <p className="text-lg font-semibold text-gray-800">{reports.length}</p>
+        <div className="bg-white rounded-xl p-4 border border-gray-200">
+          <p className="text-sm text-gray-600">En attente</p>
+          <p className="text-2xl font-bold text-yellow-600">{stats.enAttente}</p>
+          </div>
+        <div className="bg-white rounded-xl p-4 border border-gray-200">
+          <p className="text-sm text-gray-600">En cours</p>
+          <p className="text-2xl font-bold text-blue-600">{stats.enCours}</p>
+          </div>
+        <div className="bg-white rounded-xl p-4 border border-gray-200">
+          <p className="text-sm text-gray-600">Résolus</p>
+          <p className="text-2xl font-bold text-green-600">{stats.resolus}</p>
+        </div>
+        <div className="bg-white rounded-xl p-4 border border-gray-200">
+          <p className="text-sm text-gray-600">Rejetés</p>
+          <p className="text-2xl font-bold text-red-600">{stats.rejetes}</p>
         </div>
       </div>
-
-      {/* Tableau historique des signalements */}
+      {/* Filtres avancés */}
+      <div className="bg-white rounded-xl p-4 border border-gray-200 flex flex-col md:flex-row gap-4 items-center">
+        <div className="flex-1">
+          <input
+            type="text"
+            placeholder="Rechercher un signalement..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          />
+        </div>
+        <div>
+          <select
+            value={categoryFilter}
+            onChange={e => setCategoryFilter(e.target.value)}
+            className="px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent mr-2"
+          >
+            <option value="all">Toutes les catégories</option>
+            <option value="voirie">Voirie</option>
+            <option value="eclairage">Éclairage</option>
+            <option value="proprete">Propreté</option>
+            <option value="mobilier">Mobilier</option>
+            <option value="autre">Autre</option>
+          </select>
+        </div>
+        <div>
+          <select
+            value={statusFilter}
+            onChange={e => setStatusFilter(e.target.value)}
+            className="px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          >
+            <option value="all">Tous les statuts</option>
+            <option value="en-attente">En attente</option>
+            <option value="en-cours">En cours</option>
+            <option value="termine">Résolu</option>
+            <option value="resolu">Résolu</option>
+            <option value="rejete">Rejeté</option>
+          </select>
+        </div>
+        {/* Autres filtres existants ici... */}
+      </div>
+      {/* Liste des signalements */}
       <div className="bg-white rounded-lg border border-gray-200 overflow-x-auto mt-4">
             <table className="w-full">
             <thead className="bg-gray-50">
@@ -336,6 +406,19 @@ const AdminReportsPage = () => {
               Suivant
             </button>
             </div>
+      {/* Panneau de détails rapide (modale) */}
+      {selectedReport && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-8 max-w-lg w-full shadow-xl relative">
+            <button onClick={() => setSelectedReport(null)} className="absolute top-2 right-2 text-gray-400 hover:text-gray-600">
+              <XCircle className="w-6 h-6" />
+            </button>
+            <h2 className="text-xl font-bold mb-4">Détails du signalement</h2>
+            {/* Affiche ici toutes les infos du signalement, photos, historique, etc. */}
+            <pre className="text-xs bg-gray-50 p-2 rounded-lg overflow-x-auto">{JSON.stringify(selectedReport, null, 2)}</pre>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
