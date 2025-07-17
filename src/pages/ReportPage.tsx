@@ -188,6 +188,9 @@ const ReportPage = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  // Correction : fonction vide pour éviter l'erreur
+  const loadReport = () => {};
+
   useRealtimeTable('reports', loadReport);
 
   // Page de confirmation après envoi

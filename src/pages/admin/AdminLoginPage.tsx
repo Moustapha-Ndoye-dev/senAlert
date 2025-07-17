@@ -33,9 +33,13 @@ const AdminLoginPage = () => {
     setIsLoading(true);
     setError('');
 
+    // Nettoyer la saisie
+    const loginValue = email.trim().toLowerCase();
+    console.log('Tentative de login avec :', loginValue);
+
     try {
       // Essayer d'abord la connexion super admin
-      let success = await loginSuperAdmin(email, password);
+      let success = await loginSuperAdmin(loginValue, password);
       
       if (success) {
         navigate('/admin/super');
@@ -43,7 +47,7 @@ const AdminLoginPage = () => {
       }
 
       // Si ce n'est pas un super admin, essayer la connexion admin
-      success = await loginAdmin(email, password);
+      success = await loginAdmin(loginValue, password);
       
       if (success) {
         navigate('/admin/dashboard');

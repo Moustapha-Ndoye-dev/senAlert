@@ -73,80 +73,25 @@ const AdminLayout = () => {
   const getMenuItems = () => {
     if (user?.type === 'superadmin') {
       return [
-        { 
-          icon: LayoutDashboard, 
-          label: 'Dashboard', 
-          href: '/admin/super'
-        },
-        { 
-          icon: Building2, 
-          label: 'Organisations', 
-          href: '/admin/super/organizations'
-        },
-        { 
-          icon: FileText, 
-          label: 'Signalements', 
-          href: '/admin/super/reports'
-        },
-        { 
-          icon: Bell, 
-          label: 'Notifications', 
-          href: '/admin/super/notifications'
-        },
-        { 
-          icon: Users, 
-          label: 'Utilisateurs', 
-          href: '/admin/super/users'
-        },
-        { 
-          icon: BarChart3, 
-          label: 'Statistiques', 
-          href: '/admin/super/statistics'
-        },
-        { 
-          icon: Database, 
-          label: 'Système', 
-          href: '/admin/super/system'
-        },
-        { 
-          icon: Settings, 
-          label: 'Paramètres', 
-          href: '/admin/super/settings'
-        },
+        { icon: LayoutDashboard, label: 'Dashboard', href: '/admin/super' },
+        { icon: Building2, label: 'Organisations', href: '/admin/super/organizations' },
+        { icon: FileText, label: 'Signalements', href: '/admin/super/reports' },
+        { icon: Users, label: 'Utilisateurs', href: '/admin/super/users' },
+        { icon: BarChart3, label: 'Statistiques', href: '/admin/super/statistics' },
+        { icon: Database, label: 'Catégories', href: '/admin/super/categories' },
+        { icon: Database, label: 'Système', href: '/admin/super/system' },
+        { icon: Settings, label: 'Paramètres', href: '/admin/super/settings' },
       ];
     } else {
       // Admin d'organisation
       return [
-        { 
-          icon: LayoutDashboard, 
-          label: 'Dashboard', 
-          href: '/admin/dashboard'
-        },
-        { 
-          icon: FileText, 
-          label: 'Signalements', 
-          href: '/admin/dashboard/reports'
-        },
-        { 
-          icon: Bell, 
-          label: 'Notifications', 
-          href: '/admin/dashboard/notifications'
-        },
-        { 
-          icon: Users, 
-          label: 'Utilisateurs', 
-          href: '/admin/dashboard/users'
-        },
-        { 
-          icon: BarChart3, 
-          label: 'Statistiques', 
-          href: '/admin/dashboard/statistics'
-        },
-        { 
-          icon: Settings, 
-          label: 'Paramètres', 
-          href: '/admin/dashboard/settings'
-        },
+        { icon: LayoutDashboard, label: 'Dashboard', href: '/admin/dashboard' },
+        { icon: FileText, label: 'Signalements', href: '/admin/dashboard/reports' },
+        { icon: Bell, label: 'Notifications', href: '/admin/dashboard/notifications' },
+        { icon: Users, label: 'Utilisateurs', href: '/admin/dashboard/users' },
+        { icon: BarChart3, label: 'Statistiques', href: '/admin/dashboard/statistics' },
+        { icon: Database, label: 'Catégories', href: '/admin/dashboard/categories' },
+        { icon: Settings, label: 'Paramètres', href: '/admin/dashboard/settings' },
       ];
     }
   };

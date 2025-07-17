@@ -23,94 +23,108 @@ import {
   Building2,
   Crown,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  XCircle
 } from 'lucide-react';
 import { useRealtimeTable } from '@/hooks/useRealtimeTable';
+import { superAdminService, SuperAdmin, adminService, organizationService, Admin, Organization } from '@/lib/supabase';
+import { useToast } from '@/components/ui/use-toast';
 
 const AdminUsersPage = () => {
-  const [users, setUsers] = useState<any[]>([]);
-  const [filteredUsers, setFilteredUsers] = useState<any[]>([]);
+  const [users, setUsers] = useState<SuperAdmin[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<SuperAdmin[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
-  const [adminUser, setAdminUser] = useState<any>(null);
+  const [adminUser, setAdminUser] = useState<SuperAdmin | null>(null);
+  const [showCreateSuperModal, setShowCreateSuperModal] = useState(false);
+  const [newSuperAdmin, setNewSuperAdmin] = useState({
+    username: '',
+    email: '',
+    name: '',
+    password: '',
+    status: 'active'
+  });
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<{ open: boolean, userId: string | null }>({ open: false, userId: null });
+  const [editUser, setEditUser] = useState<SuperAdmin | null>(null);
+  const [editForm, setEditForm] = useState({ username: '', email: '', name: '', status: 'active' });
+  const { toast } = useToast();
 
   useEffect(() => {
     const userData = localStorage.getItem('admin_user');
     if (userData) {
       setAdminUser(JSON.parse(userData));
     }
-    loadUsers();
+    loadSuperAdmins();
   }, []);
 
   useEffect(() => {
     filterUsers();
   }, [users, searchTerm, roleFilter]);
 
-  const loadUsers = () => {
-    // Charger les utilisateurs de la plateforme (admins, super admins)
-    const platformUsers = [
-      {
-        id: 'super_admin_1',
-        name: 'Super Administrateur',
-        email: 'superadmin@senalert.sn',
-        role: 'super_admin',
-        status: 'active',
-        lastLogin: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-        createdAt: '2024-01-01T00:00:00Z',
-        permissions: ['all'],
-        organization: 'SenAlert'
-      },
-      {
-        id: 'admin_1',
-        name: 'Admin Guédiawaye',
-        email: 'admin@gediawaye.sn',
-        role: 'org_admin',
-        status: 'active',
-        lastLogin: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-        createdAt: '2024-01-15T10:00:00Z',
-        permissions: ['reports', 'organizations'],
-        organization: 'Mairie de Guédiawaye'
-      },
-      {
-        id: 'admin_2',
-        name: 'Admin ONG',
-        email: 'admin@ong-env.sn',
-        role: 'org_admin',
-        status: 'active',
-        lastLogin: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-        createdAt: '2024-01-10T09:00:00Z',
-        permissions: ['reports'],
-        organization: 'ONG Environnement Sénégal'
-      },
-      {
-        id: 'admin_3',
-        name: 'Admin Senelec',
-        email: 'admin@senelec.sn',
-        role: 'org_admin',
-        status: 'inactive',
-        lastLogin: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-        createdAt: '2024-01-20T16:00:00Z',
-        permissions: ['reports'],
-        organization: 'Senelec - Zone Guédiawaye'
-      }
-    ];
+  const loadSuperAdmins = async () => {
+    const superAdmins = await superAdminService.getAll();
+    setUsers(superAdmins);
+  };
 
-    setUsers(platformUsers);
+  // CRUD handlers
+  const handleCreate = async (newSuperAdmin) => {
+    await superAdminService.create(newSuperAdmin);
+    await loadSuperAdmins();
+  };
+  const handleUpdate = async (id, updates) => {
+    await superAdminService.update(id, updates);
+    await loadSuperAdmins();
+  };
+  const handleDelete = async (id) => {
+    setShowDeleteConfirm({ open: true, userId: id });
+  };
+
+  const confirmDelete = async () => {
+    if (showDeleteConfirm.userId) {
+      await superAdminService.delete(showDeleteConfirm.userId);
+      await loadSuperAdmins();
+      toast({
+        title: 'Suppression réussie',
+        description: 'Le super administrateur a bien été supprimé.',
+      });
+    }
+    setShowDeleteConfirm({ open: false, userId: null });
+  };
+
+  const handleEdit = (user: SuperAdmin) => {
+    setEditUser(user);
+    setEditForm({
+      username: user.username,
+      email: user.email,
+      name: user.name,
+      status: user.status || 'active',
+    });
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editUser) {
+      await superAdminService.update(editUser.id, editForm);
+      setEditUser(null);
+      await loadSuperAdmins();
+    }
+  };
+
+  const handleCreateSuperAdmin = async () => {
+    await superAdminService.create(newSuperAdmin);
+    setShowCreateSuperModal(false);
+    await loadSuperAdmins();
   };
 
   const filterUsers = () => {
-    let filtered = [...users];
+    let filtered = users;
     if (searchTerm) {
       filtered = filtered.filter(user =>
         user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.organization?.toLowerCase().includes(searchTerm.toLowerCase())
+        user.email?.toLowerCase().includes(searchTerm.toLowerCase())
       );
-    }
-    if (roleFilter !== 'all') {
-      filtered = filtered.filter(user => user.role === roleFilter);
     }
     setFilteredUsers(filtered);
   };
@@ -124,8 +138,6 @@ const AdminUsersPage = () => {
   // Statistiques
   const stats = {
     total: users.length,
-    superAdmins: users.filter(u => u.role === 'super_admin').length,
-    orgAdmins: users.filter(u => u.role === 'org_admin').length,
     actifs: users.filter(u => u.status === 'active').length
   };
 
@@ -181,7 +193,7 @@ const AdminUsersPage = () => {
     }
   };
 
-  useRealtimeTable('admin', loadUsers);
+  useRealtimeTable('admin', loadSuperAdmins);
 
   return (
     <div className="space-y-6">
@@ -192,7 +204,7 @@ const AdminUsersPage = () => {
           <p className="text-gray-600">Gestion des utilisateurs de la plateforme</p>
         </div>
         <div className="flex items-center gap-2">
-          <Crown className="w-8 h-8 text-indigo-500" />
+          <button onClick={() => setShowCreateSuperModal(true)} className="px-4 py-2 bg-purple-600 text-white rounded-lg"><Crown className="inline w-4 h-4 mr-2" />Créer un Super Admin</button>
         </div>
       </div>
 
@@ -213,7 +225,7 @@ const AdminUsersPage = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Super Admins</p>
-              <p className="text-2xl font-bold text-purple-600">{stats.superAdmins}</p>
+              <p className="text-2xl font-bold text-purple-600">{stats.total}</p>
             </div>
             <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
               <Crown className="w-5 h-5 text-purple-600" />
@@ -224,7 +236,7 @@ const AdminUsersPage = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Admins Orgs</p>
-              <p className="text-2xl font-bold text-blue-600">{stats.orgAdmins}</p>
+              <p className="text-2xl font-bold text-blue-600">{stats.total}</p>
             </div>
             <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
               <Shield className="w-5 h-5 text-blue-600" />
@@ -259,17 +271,6 @@ const AdminUsersPage = () => {
               />
             </div>
           </div>
-          <div className="flex gap-2">
-            <select
-              value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value)}
-              className="px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-            >
-              <option value="all">Tous les rôles</option>
-              <option value="super_admin">Super Admin</option>
-              <option value="org_admin">Admin Organisation</option>
-            </select>
-          </div>
         </div>
       </div>
 
@@ -280,17 +281,13 @@ const AdminUsersPage = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Utilisateur</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rôle</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Organisation</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dernière connexion</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {currentUsers.map((user) => {
-                const roleInfo = getRoleInfo(user.role);
                 const statusInfo = getStatusInfo(user.status);
-                const RoleIcon = roleInfo.icon;
                 const StatusIcon = statusInfo.icon;
 
                 return (
@@ -307,22 +304,14 @@ const AdminUsersPage = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${roleInfo.bg} ${roleInfo.color}`}>
-                        <RoleIcon className="w-3 h-3 mr-1" />
-                        {roleInfo.label}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{user.organization}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
                       <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusInfo.bg} ${statusInfo.color}`}>
                         <StatusIcon className="w-3 h-3 mr-1" />
                         {statusInfo.label}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString('fr-FR') : 'Jamais'}
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <button onClick={() => handleEdit(user)} className="text-indigo-600 hover:text-indigo-900 mr-2"><Edit className="inline w-4 h-4" /></button>
+                      <button onClick={() => handleDelete(user.id)} className="text-red-600 hover:text-red-900"><Trash2 className="inline w-4 h-4" /></button>
                     </td>
                   </tr>
                 );
@@ -395,6 +384,58 @@ const AdminUsersPage = () => {
           </div>
         )}
       </div>
+      {showCreateSuperModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-8 max-w-lg w-full shadow-xl relative">
+            <button onClick={() => setShowCreateSuperModal(false)} className="absolute top-2 right-2 text-gray-400 hover:text-gray-600">
+              <XCircle className="w-6 h-6" />
+            </button>
+            <h2 className="text-xl font-bold mb-4">Créer un super administrateur</h2>
+            <form onSubmit={e => { e.preventDefault(); handleCreateSuperAdmin(); }} className="space-y-4">
+              <input type="text" placeholder="Nom d'utilisateur" value={newSuperAdmin.username} onChange={e => setNewSuperAdmin({ ...newSuperAdmin, username: e.target.value })} className="w-full px-4 py-2 border rounded" required />
+              <input type="email" placeholder="Email" value={newSuperAdmin.email} onChange={e => setNewSuperAdmin({ ...newSuperAdmin, email: e.target.value })} className="w-full px-4 py-2 border rounded" required />
+              <input type="text" placeholder="Nom complet" value={newSuperAdmin.name} onChange={e => setNewSuperAdmin({ ...newSuperAdmin, name: e.target.value })} className="w-full px-4 py-2 border rounded" required />
+              <input type="password" placeholder="Mot de passe" value={newSuperAdmin.password} onChange={e => setNewSuperAdmin({ ...newSuperAdmin, password: e.target.value })} className="w-full px-4 py-2 border rounded" required />
+              <button type="submit" className="w-full py-2 bg-purple-600 text-white rounded">Créer</button>
+            </form>
+          </div>
+        </div>
+      )}
+      {editUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-8 max-w-lg w-full shadow-xl relative">
+            <button onClick={() => setEditUser(null)} className="absolute top-2 right-2 text-gray-400 hover:text-gray-600">
+              <XCircle className="w-6 h-6" />
+            </button>
+            <h2 className="text-xl font-bold mb-4">Modifier le super administrateur</h2>
+            <form onSubmit={handleEditSubmit} className="space-y-4">
+              <input type="text" placeholder="Nom d'utilisateur" value={editForm.username} onChange={e => setEditForm({ ...editForm, username: e.target.value })} className="w-full px-4 py-2 border rounded" required />
+              <input type="email" placeholder="Email" value={editForm.email} onChange={e => setEditForm({ ...editForm, email: e.target.value })} className="w-full px-4 py-2 border rounded" required />
+              <input type="text" placeholder="Nom complet" value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} className="w-full px-4 py-2 border rounded" required />
+              <select value={editForm.status} onChange={e => setEditForm({ ...editForm, status: e.target.value })} className="w-full px-4 py-2 border rounded">
+                <option value="active">Actif</option>
+                <option value="inactive">Inactif</option>
+              </select>
+              <button type="submit" className="w-full py-2 bg-indigo-600 text-white rounded">Enregistrer</button>
+            </form>
+          </div>
+        </div>
+      )}
+      {showDeleteConfirm.open && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-8 max-w-md w-full shadow-xl relative">
+            <button onClick={() => setShowDeleteConfirm({ open: false, userId: null })} className="absolute top-2 right-2 text-gray-400 hover:text-gray-600">
+              <XCircle className="w-6 h-6" />
+            </button>
+            <h2 className="text-xl font-bold mb-4 text-red-600">Confirmer la suppression</h2>
+            <p className="mb-6">Voulez-vous vraiment supprimer ce super administrateur ? Cette action est irréversible.</p>
+            <div className="flex gap-4 justify-end">
+              <button onClick={() => setShowDeleteConfirm({ open: false, userId: null })} className="px-4 py-2 bg-gray-200 rounded">Annuler</button>
+              <button onClick={confirmDelete} className="px-4 py-2 bg-red-600 text-white rounded">Supprimer</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

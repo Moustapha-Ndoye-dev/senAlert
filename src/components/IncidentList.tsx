@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { reportService, Report } from '@/lib/supabase';
 import { useDepartment } from '@/hooks/useDepartment';
+import { getClosestDepartement } from '@/lib/departements';
 
 interface Incident {
   id: string;
@@ -33,9 +34,13 @@ export const IncidentList: React.FC = () => {
       // Filtrer par département si disponible
       let filteredReports = allReports;
       if (departmentName && departmentName !== 'Localisation inconnue') {
-        filteredReports = allReports.filter(report => 
-          report.department.toLowerCase().includes(departmentName.toLowerCase())
-        );
+        filteredReports = allReports.filter(report => {
+          let reportDept = report.department;
+          if (report.latitude && report.longitude) {
+            reportDept = getClosestDepartement(report.latitude, report.longitude);
+          }
+          return reportDept && reportDept.toLowerCase() === departmentName.toLowerCase();
+        });
       }
 
       // Limiter aux 5 plus récents

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getDepartmentName } from '@/lib/utils';
+import { getClosestDepartement } from '@/lib/departements';
 
 export const useDepartment = () => {
   const [departmentName, setDepartmentName] = useState<string>("Dakar");
@@ -10,7 +10,7 @@ export const useDepartment = () => {
       const locationData = localStorage.getItem('user_location');
       if (locationData) {
         const location = JSON.parse(locationData);
-        const deptName = getDepartmentName(location.latitude, location.longitude);
+        const deptName = getClosestDepartement(location.latitude, location.longitude);
         setDepartmentName(deptName);
       } else {
         setDepartmentName("Dakar");
